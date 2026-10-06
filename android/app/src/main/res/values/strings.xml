@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Machos Padel App</string>
+    <string name="title_activity_main">Machos Padel App</string>
+    <string name="package_name">com.machospadel.app</string>
+    <string name="custom_url_scheme">com.machospadel.app</string>
+</resources>

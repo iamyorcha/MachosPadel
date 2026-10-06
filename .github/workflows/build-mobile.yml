@@ -1,0 +1,100 @@
+name: Build Mobile Apps (Android APK/AAB & iOS)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: 🤖 Compilar Android (APK y AAB)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar Dependencias
+        run: npm ci || npm install
+
+      - name: Compilar App Web
+        run: npm run build
+
+      - name: Sincronizar Capacitor Android
+        run: npx cap sync android
+
+      - name: Configurar Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 17
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Dar permisos de ejecución a gradlew
+        run: chmod +x android/gradlew
+
+      - name: Compilar APK (Debug)
+        run: cd android && ./gradlew assembleDebug
+
+      - name: Compilar AAB (Release Bundle para Google Play Store)
+        run: cd android && ./gradlew bundleRelease
+
+      - name: Subir APK generado
+        uses: actions/upload-artifact@v4
+        with:
+          name: MachosPadel-Android-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Subir AAB para Google Play Store
+        uses: actions/upload-artifact@v4
+        with:
+          name: MachosPadel-Android-Bundle-AAB
+          path: android/app/build/outputs/bundle/release/app-release.aab
+
+  build-ios:
+    name: 🍏 Compilar iOS (Xcode / IPA)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar Dependencias
+        run: npm ci || npm install
+
+      - name: Compilar App Web
+        run: npm run build
+
+      - name: Sincronizar Capacitor iOS
+        run: npx cap sync ios
+
+      - name: Seleccionar versión de Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Compilar Proyecto Xcode (sin firma para pruebas o con certificados)
+        run: |
+          cd ios/App
+          xcodebuild build \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -destination 'generic/platform=iOS' \
+            -configuration Release \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Empaquetar proyecto iOS
+        uses: actions/upload-artifact@v4
+        with:
+          name: MachosPadel-iOS-Build
+          path: ios/App

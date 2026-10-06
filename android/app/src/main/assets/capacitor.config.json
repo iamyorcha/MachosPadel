@@ -1,0 +1,8 @@
+{
+	"appId": "com.machospadel.app",
+	"appName": "Machos Padel App",
+	"webDir": "dist",
+	"server": {
+		"androidScheme": "https"
+	}
+}
